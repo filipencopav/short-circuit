@@ -1,0 +1,20 @@
+* short-cirquit let
+Library for writing more flexible =let= forms, which may exit earlier with a custom value.
+
+* Usage
+#+begin_src clojure
+  (require 'filipencopav.short-cirquit :as sc)
+
+  (defn some-cool-fn [m]
+
+    (sc/let [a (:key1 m)
+             b (if a
+                 (+ a 5)
+                 (sc/exit {:error "provided map doesn't have :key1"}))]
+      (reduce + [a b]))
+
+    )
+#+end_src
+
+* License
+BSD 3 clause.
