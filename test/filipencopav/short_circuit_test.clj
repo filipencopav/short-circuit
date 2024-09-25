@@ -1,5 +1,5 @@
-(ns filipencopav.short-cirquit-test
-  (:require [filipencopav.short-cirquit :as sc]
+(ns filipencopav.short-circuit-test
+  (:require [filipencopav.short-circuit :as sc]
             [clojure.test :as t :refer [deftest is]]))
 
 (deftest basic-let-behavior
@@ -81,4 +81,55 @@
                   b (inner-call-helper a)
                   c (throw (ex-info "unreachable" {}))]
            (throw (ex-info "unreachable" {})))
-        1)))
+         1)))
+
+(defn- get-evaluation-exception [form]
+  (try (eval form)
+    (catch Exception e e)))
+
+(deftest validates-parameters
+  (t/are [x]
+    (= clojure.lang.Compiler$CompilerException
+       (type (get-evaluation-exception x)))
+    `(sc/let [~'a])
+    `(sc/let ())
+    `(sc/let [nil 1])))
+
+(comment
+  (require '[criterium.core :as c])
+
+  ;;;; `sc/let` benchmark
+  ;;
+  ;;   Evaluation count : 1560780 in 60 samples of 26013 calls.
+  ;;       Execution time sample mean : 38.599516 µs
+  ;;              Execution time mean : 38.601035 µs
+  ;; Execution time sample std-deviation : 219.078972 ns
+  ;;     Execution time std-deviation : 223.751631 ns
+  ;;    Execution time lower quantile : 38.287076 µs ( 2.5%)
+  ;;    Execution time upper quantile : 39.042642 µs (97.5%)
+  ;;                    Overhead used : 4.062608 ns
+  (let [pairs (flatten (repeatedly 200 (juxt gensym #(rand-int 1000))))]
+    (c/bench
+     `(sc/let [~@pairs]
+        [~@(reverse pairs)])
+     :verbose))
+
+  ;;;; `let` benchmark
+  ;; Evaluation count : 1555980 in 60 samples of 25933 calls.
+  ;;       Execution time sample mean : 38.554304 µs
+  ;;              Execution time mean : 38.555960 µs
+  ;; Execution time sample std-deviation : 197.808731 ns
+  ;;     Execution time std-deviation : 202.462309 ns
+  ;;    Execution time lower quantile : 38.205704 µs ( 2.5%)
+  ;;    Execution time upper quantile : 38.919466 µs (97.5%)
+  ;;                    Overhead used : 4.062608 ns
+  (let [pairs (flatten (repeatedly 200 (juxt gensym #(rand-int 1000))))]
+    (c/bench
+     `(let [~@pairs]
+        [~@(reverse pairs)])
+     :verbose))
+
+
+
+
+)
