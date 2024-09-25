@@ -1,19 +1,46 @@
-* short-cirquit let
+* short-circuit let
 Library for writing more flexible =let= forms, which may exit earlier with a custom value.
 
-* Usage
+* Install
+Add the following dependency into your =deps.edn= file:
 #+begin_src clojure
-  (require 'filipencopav.short-cirquit :as sc)
+  io.github.filipencopav/short-circuit {:git/sha "11b4d95"
+                                        :git/tag "v1.1"}
+#+end_src
 
-  (defn some-cool-fn [m]
+* Usage
+Require it:
+#+begin_src clojure
+  (require '[filipencopav.short-circuit :as sc])
+#+end_src
 
-    (sc/let [a (:key1 m)
-             b (if a
-                 (+ a 5)
-                 (sc/exit {:error "provided map doesn't have :key1"}))]
-      (reduce + [a b]))
+- =sc/let=: Use it to create a let binding that can short-circuit when a certain value is bound.
+- =sc/exit=: Use it to mark a value as a short-circuiting one. =sc/let= will return the value.
 
-    )
+** Examples
+When all goes well, functions as normal let
+#+begin_src clojure
+  (require 'filipencopav.short-circuit :as sc)
+
+  (def m {:key1 1})
+
+  (sc/let [a (:key1 m)
+           b (if a
+               (+ a 5)
+               (sc/exit {:error "provided map doesn't have :key1"}))]
+    (+ a b)) ;=> 7
+  #+end_src
+
+When receives a value wrapped in =sc/exit= (it's a =reduced= value under the hood), short-circuits and returns the value early.
+#+begin_src clojure
+  (def m2 {})
+
+  ;; same form as above
+  (sc/let [a (:key1 m)
+           b (if a
+               (+ a 5)
+               (sc/exit {:error "provided map doesn't have :key1"}))]
+    (+ a b)) ;=> {:error "provided map doesn't have :key1"}
 #+end_src
 
 * License
