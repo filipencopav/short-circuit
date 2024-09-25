@@ -36,7 +36,7 @@ When receives a value wrapped in =sc/exit= (it's a =reduced= value under the hoo
   (def m2 {})
 
   ;; same form as above
-  (sc/let [a (:key1 m)
+  (sc/let [a (:key1 m2)
            b (if a
                (+ a 5)
                (sc/exit {:error "provided map doesn't have :key1"}))]
